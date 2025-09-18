@@ -1,0 +1,7 @@
+Faker
+mimesis
+hashlib
+scrubadub
+scrubadub-spacy
+fastapi
+uvicorn[standard]
