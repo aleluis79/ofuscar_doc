@@ -5,6 +5,7 @@ import scrubadub_spacy
 import re
 from scrubadub.filth import NameFilth, Filth
 from faker import Faker
+from fastapi.middleware.cors import CORSMiddleware
 
 # --- Definición de Filths personalizados ---
 class CBUFilth(Filth):
@@ -46,6 +47,15 @@ cierre = "}}"
 # --- FastAPI ---
 app = FastAPI(title="API de Ofuscación de Texto")
 
+# Agregar middleware de CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Cambia esto según tus necesidades de seguridad
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 class TextoRequest(BaseModel):
     texto: str
 
@@ -71,7 +81,7 @@ def ofuscar(request: TextoRequest):
         if filth.type == "name":
             original_name = filth.text
             if original_name not in name_map:
-                name_map[original_name] = apertura + fake.first_name() + " " + fake.last_name() + cierre
+                name_map[original_name] = apertura + fake.first_name() + cierre
             text = text.replace(original_name, name_map[original_name])
         elif filth.type == "phone":
             original_phone = filth.text

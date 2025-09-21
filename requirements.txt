@@ -1,7 +1,6 @@
-Faker
-mimesis
-hashlib
+fastapi
+uvicorn
 scrubadub
 scrubadub-spacy
-fastapi
-uvicorn[standard]
+faker
+pydantic

@@ -94,6 +94,26 @@ Accede a la documentación automática de la API en:
 - [Swagger UI](http://localhost:8000/docs)
 - [ReDoc](http://localhost:8000/redoc)
 
+## Correr ollama con Docker
+docker run -d --gpus=all -v ollama:/root/.ollama -p 11434:11434 --name ollama ollama/ollama
+
+## Correr open-webui con Docker
+docker run -d -p 3000:8080 --gpus all --add-host=host.docker.internal:host-gateway -v open-webui:/app/backend/data --name open-webui --restart always ghcr.io/open-webui/open-webui:cuda
+
+## Construir app 
+docker build -t myapp .
+
+## Correr la app
+docker run -it --rm -p 8000:8000 myapp
+
+## Crear red en Docker
+docker network create mi_red
+
+## Enlazar la misma red a ambos contenedores para que se vean
+docker network connect mi_red myapp
+
+docker network connect mi_red open-webui
+
 ## Dependencias principales
 
 - fastapi
