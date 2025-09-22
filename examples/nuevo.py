@@ -75,44 +75,54 @@ for filth in scrubber.iter_filth(text):
         original_phone = filth.text
         # Si no está en el diccionario, generar uno nuevo
         if original_phone not in phone_map:
-            phone_map[original_phone] = apertura + fake.phone_number() + cierre
+            unique_id = hashlib.sha1(original_phone.encode()).hexdigest()[:4]
+            phone_map[original_phone] = apertura + f"PHONE_{unique_id}" + cierre
         # Reemplazar en el texto
         text = text.replace(original_phone, phone_map[original_phone])
     elif filth.type == "email":
         original_email = filth.text
         # Si no está en el diccionario, generar uno nuevo
         if original_email not in email_map:
-            email_map[original_email] = apertura + fake.email() + cierre
+            unique_id = hashlib.sha1(original_email.encode()).hexdigest()[:4]
+            email_map[original_email] = apertura + f"MAIL_{unique_id}" + cierre
         # Reemplazar en el texto
         text = text.replace(original_email, email_map[original_email])
     elif filth.type == "cbu":
         original_cbu = filth.text
         # Si no está en el diccionario, generar uno nuevo
         if original_cbu not in cbu_map:
-            cbu_map[original_cbu] = apertura + "".join([str(fake.random_digit()) for _ in range(22)]) + cierre
+            unique_id = hashlib.sha1(original_cbu.encode()).hexdigest()[:4]
+            cbu_map[original_cbu] = apertura + f"CBU_{unique_id}" + cierre
         # Reemplazar en el texto
         text = text.replace(original_cbu, cbu_map[original_cbu])
     elif filth.type == "url":
         original_url = filth.text
         # Si no está en el diccionario, generar uno nuevo
         if original_url not in url_map:
-            url_map[original_url] = apertura + fake.url() + cierre
+            unique_id = hashlib.sha1(original_url.encode()).hexdigest()[:4]
+            url_map[original_url] = apertura + f"URL_{unique_id}" + cierre
         # Reemplazar en el texto
         text = text.replace(original_url, url_map[original_url])
     elif filth.type == "credit_card":
         original_credit_card = filth.text
         # Si no está en el diccionario, generar uno nuevo
         if original_credit_card not in credit_card_map:
-            credit_card_map[original_credit_card] = apertura + fake.credit_card_number() + cierre
+            unique_id = hashlib.sha1(original_credit_card.encode()).hexdigest()[:4]
+            credit_card_map[original_credit_card] = apertura + f"CREDID_CARD_{unique_id}" + cierre
         # Reemplazar en el texto
         text = text.replace(original_credit_card, credit_card_map[original_credit_card])
     elif filth.type == "dni":
         original_dni = filth.text
         # Si no está en el diccionario, generar uno nuevo
         if original_dni not in dni_map:
-            dni_map[original_dni] = apertura + "".join([str(fake.random_digit()) for _ in range(8)]) + cierre
+            unique_id = hashlib.sha1(original_dni.encode()).hexdigest()[:4]
+            dni_map[original_dni] = apertura + f"DNI_{unique_id}" + cierre
         # Reemplazar en el texto
         text = text.replace(original_dni, dni_map[original_dni])
+
+
+print("Texto original:")
+print(text_original)
 
 print("Texto ofuscado:")
 print(text)
