@@ -2,7 +2,7 @@ import scrubadub
 import scrubadub_spacy
 import re
 import hashlib
-from scrubadub.filth import NameFilth, Filth
+from scrubadub.filth import Filth
 from faker import Faker
 
 class CBUFilth(Filth):

@@ -6,7 +6,6 @@ import re
 import hashlib
 from scrubadub.filth import NameFilth, Filth
 from faker import Faker
-from fastapi.middleware.cors import CORSMiddleware
 
 # --- Definición de Filths personalizados ---
 class CBUFilth(Filth):
@@ -18,6 +17,12 @@ class CreditCardFilth(Filth):
 class DNIFilth(Filth):
     type = "dni"
 
+class NOTAFilth(Filth):
+    type = "nota"
+
+class IPPFilth(Filth):
+    type = "ipp"
+
 # --- Detectores ---
 class CBUDetector(scrubadub.detectors.RegexDetector):
     name = 'cbu_detector'
@@ -27,12 +32,22 @@ class CBUDetector(scrubadub.detectors.RegexDetector):
 class CreditCardDetector(scrubadub.detectors.RegexDetector):
     name = 'creditCard_detector'
     filth_cls = CreditCardFilth
-    regex = re.compile(r"\b(?:\d[ -]?){13,19}\b")
+    regex = re.compile(r"\d{4}[- ]\d{4}[- ]\d{4}[- ]\d{4}")
 
 class DNIDetector(scrubadub.detectors.RegexDetector):
     name = 'dni_detector'
     filth_cls = DNIFilth
     regex = re.compile(r"\b\d{1,2}\.?\d{3}\.?\d{3}\b")
+
+class NOTADetector(scrubadub.detectors.RegexDetector):
+    name = 'nota_detector'
+    filth_cls = NOTAFilth
+    regex = re.compile(r'NOTA-\d{1,6}-\d{1,2}-\d{1,2}')
+
+class IPPDetector(scrubadub.detectors.RegexDetector):
+    name = 'ipp_detector'
+    filth_cls = IPPFilth
+    regex = re.compile(r'[A-Za-z]{2}-\d{2}-\d{2}-\d{6}-\d{2}[-/]\d{2}')
 
 # --- Inicialización ---
 fake = Faker(locale="es_AR")
@@ -41,6 +56,8 @@ scrubber.add_detector(scrubadub_spacy.detectors.SpacyEntityDetector(locale="en_U
 scrubber.add_detector(CBUDetector)
 scrubber.add_detector(CreditCardDetector)
 scrubber.add_detector(DNIDetector)
+scrubber.add_detector(NOTADetector)
+scrubber.add_detector(IPPDetector)
 
 apertura = "{{"
 cierre = "}}"
@@ -48,14 +65,16 @@ cierre = "}}"
 # --- FastAPI ---
 app = FastAPI(title="API de Ofuscación de Texto")
 
-# Agregar middleware de CORS
+# Add Cors
+from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Cambia esto según tus necesidades de seguridad
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 class TextoRequest(BaseModel):
     texto: str
@@ -63,6 +82,10 @@ class TextoRequest(BaseModel):
 class TextoDesofuscarRequest(BaseModel):
     texto_ofuscado: str
     mapeos: dict
+
+@app.get("/ping")
+def ping():
+    return {"message": "pong"}
 
 @app.post("/ofuscar")
 def ofuscar(request: TextoRequest):
@@ -74,80 +97,53 @@ def ofuscar(request: TextoRequest):
     """
     text = request.texto
 
-    # Diccionarios para mantener consistencia
-    name_map, phone_map, email_map = {}, {}, {}
-    cbu_map, url_map, credit_card_map, dni_map = {}, {}, {}, {}
+    field_config = {
+        "name": {"output": "nombres", "prefix": "NAME"},
+        "phone": {"output": "telefonos", "prefix": "PHONE"},
+        "email": {"output": "emails", "prefix": "MAIL"},
+        "cbu": {"output": "cbus", "prefix": "CBU"},
+        "url": {"output": "urls", "prefix": "URL"},
+        "credit_card": {"output": "tarjetas", "prefix": "CREDID_CARD"},
+        "dni": {"output": "dnis", "prefix": "DNI"},
+        "ipp": {"output": "ipps", "prefix": "IPP"},
+        "nota": {"output": "notas", "prefix": "NOTA"},
+    }
 
-    for filth in scrubber.iter_filth(text):
-        if filth.type == "name":
-            original_name = filth.text
-            # Si no está en el diccionario, generar uno nuevo
-            if original_name not in name_map:
-                unique_id = hashlib.sha1(original_name.encode()).hexdigest()[:4]
-                name_map[original_name] = apertura + f"NAME_{unique_id}" + cierre
-            # Reemplazar en el texto
-            text = text.replace(original_name, name_map[original_name])
-        elif filth.type == "phone":
-            original_phone = filth.text
-            # Si no está en el diccionario, generar uno nuevo
-            if original_phone not in phone_map:
-                unique_id = hashlib.sha1(original_phone.encode()).hexdigest()[:4]
-                phone_map[original_phone] = apertura + f"PHONE_{unique_id}" + cierre
-            # Reemplazar en el texto
-            text = text.replace(original_phone, phone_map[original_phone])
-        elif filth.type == "email":
-            original_email = filth.text
-            # Si no está en el diccionario, generar uno nuevo
-            if original_email not in email_map:
-                unique_id = hashlib.sha1(original_email.encode()).hexdigest()[:4]
-                email_map[original_email] = apertura + f"MAIL_{unique_id}" + cierre
-            # Reemplazar en el texto
-            text = text.replace(original_email, email_map[original_email])
-        elif filth.type == "cbu":
-            original_cbu = filth.text
-            # Si no está en el diccionario, generar uno nuevo
-            if original_cbu not in cbu_map:
-                unique_id = hashlib.sha1(original_cbu.encode()).hexdigest()[:4]
-                cbu_map[original_cbu] = apertura + f"CBU_{unique_id}" + cierre
-            # Reemplazar en el texto
-            text = text.replace(original_cbu, cbu_map[original_cbu])
-        elif filth.type == "url":
-            original_url = filth.text
-            # Si no está en el diccionario, generar uno nuevo
-            if original_url not in url_map:
-                unique_id = hashlib.sha1(original_url.encode()).hexdigest()[:4]
-                url_map[original_url] = apertura + f"URL_{unique_id}" + cierre
-            # Reemplazar en el texto
-            text = text.replace(original_url, url_map[original_url])
-        elif filth.type == "credit_card":
-            original_credit_card = filth.text
-            # Si no está en el diccionario, generar uno nuevo
-            if original_credit_card not in credit_card_map:
-                unique_id = hashlib.sha1(original_credit_card.encode()).hexdigest()[:4]
-                credit_card_map[original_credit_card] = apertura + f"CREDID_CARD_{unique_id}" + cierre
-            # Reemplazar en el texto
-            text = text.replace(original_credit_card, credit_card_map[original_credit_card])
-        elif filth.type == "dni":
-            original_dni = filth.text
-            # Si no está en el diccionario, generar uno nuevo
-            if original_dni not in dni_map:
-                unique_id = hashlib.sha1(original_dni.encode()).hexdigest()[:4]
-                dni_map[original_dni] = apertura + f"DNI_{unique_id}" + cierre
-            # Reemplazar en el texto
-            text = text.replace(original_dni, dni_map[original_dni])
+    temp_maps = {
+        "nombres": {},
+        "telefonos": {},
+        "emails": {},
+        "cbus": {},
+        "urls": {},
+        "tarjetas": {},
+        "dnis": {},
+        "ipps": {},
+        "notas": {},
+    }
+
+    try:
+        filths = list(scrubber.iter_filth(text))
+    except:
+        filths = []
+  
+    for filth in filths:
+        # Procesar solo si el tipo está en la configuración        
+        config = field_config.get(filth.type, None)
+        if config:
+            original_text = filth.text
+            text_map = temp_maps[config["output"]]
+            prefix = config["prefix"]
+
+            if original_text not in text_map:
+                unique_id = hashlib.sha1(original_text.encode()).hexdigest()[:4]
+                text_map[original_text] = f"{apertura}{prefix}_{unique_id}{cierre}"
+
+            text = text.replace(original_text, text_map[original_text])
 
     # Retornamos el texto ofuscado y los mapeos
     return {
         "texto_ofuscado": text,
-        "mapeos": {
-            "nombres": name_map,
-            "telefonos": phone_map,
-            "emails": email_map,
-            "cbus": cbu_map,
-            "urls": url_map,
-            "credit_cards": credit_card_map,
-            "dnis": dni_map
-        }
+        "mapeos": temp_maps,
     }
 
 @app.post("/desofuscar")
