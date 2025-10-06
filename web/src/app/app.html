@@ -1,0 +1,16 @@
+<router-outlet />
+
+<h3>Texto a ofuscar</h3>
+<textarea [(ngModel)]="texto_a_ofuscar"></textarea>
+@if (texto_a_ofuscar()) {
+    <button (click)="ofuscar(texto_a_ofuscar())">Ofuscar</button>    
+}
+@if (mapeos()) {
+    <h3>Texto ofuscado</h3>
+    <p>{{ texto_ofuscado() }}</p>
+    <h3>Mapeos</h3>
+    <p>{{ mapeos() | json }}</p>
+    <h3>Texto desofuscado</h3>
+    <button (click)="desofuscar()">Desofuscar</button>
+    <p>{{ texto_desofuscado() }}</p>
+}
