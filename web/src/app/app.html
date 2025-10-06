@@ -1,16 +1,44 @@
 <router-outlet />
 
-<h3>Texto a ofuscar</h3>
-<textarea [(ngModel)]="texto_a_ofuscar"></textarea>
-@if (texto_a_ofuscar()) {
-    <button (click)="ofuscar(texto_a_ofuscar())">Ofuscar</button>    
-}
-@if (mapeos()) {
-    <h3>Texto ofuscado</h3>
-    <p>{{ texto_ofuscado() }}</p>
-    <h3>Mapeos</h3>
-    <p>{{ mapeos() | json }}</p>
-    <h3>Texto desofuscado</h3>
-    <button (click)="desofuscar()">Desofuscar</button>
-    <p>{{ texto_desofuscado() }}</p>
-}
+<div class="min-h-screen flex flex-col items-center justify-start bg-gray-50 py-8 px-4">
+  <div class="w-full max-w-xl bg-white rounded-lg shadow-md p-6 space-y-6">
+    <h3 class="text-2xl font-semibold text-gray-800">Texto a ofuscar</h3>
+    <textarea
+      [(ngModel)]="texto_a_ofuscar"
+      class="w-full min-h-[120px] p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 resize-y text-gray-700"
+      placeholder="Introduce el texto aquí..."
+    ></textarea>
+    @if (texto_a_ofuscar()) {
+      <button
+        (click)="ofuscar(texto_a_ofuscar())"
+        class="w-full py-2 px-4 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition"
+        type="button"
+      >
+        Ofuscar
+      </button>
+    }
+    @if (mapeos()) {
+      <div class="space-y-4">
+        <div>
+          <h3 class="text-xl font-semibold text-gray-700">Texto ofuscado</h3>
+          <p class="bg-gray-100 rounded p-3 text-gray-800 break-words">{{ texto_ofuscado() }}</p>
+        </div>
+        <div>
+          <h3 class="text-xl font-semibold text-gray-700">Mapeos</h3>
+          <pre class="bg-gray-100 rounded p-3 text-gray-600 text-sm overflow-x-auto">{{ mapeos() | json }}</pre>
+        </div>
+        <div>
+          <h3 class="text-xl font-semibold text-gray-700">Texto desofuscado</h3>
+          <button
+            (click)="desofuscar()"
+            class="py-2 px-4 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition"
+            type="button"
+          >
+            Desofuscar
+          </button>
+          <p class="bg-gray-100 rounded p-3 text-gray-800 break-words mt-2">{{ texto_desofuscado() }}</p>
+        </div>
+      </div>
+    }
+  </div>
+</div>

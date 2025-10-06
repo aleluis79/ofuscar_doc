@@ -8,7 +8,7 @@ import { JsonPipe } from '@angular/common';
   selector: 'app-root',
   imports: [RouterOutlet, FormsModule, JsonPipe],
   templateUrl: './app.html',
-  styleUrl: './app.scss'
+  styleUrl: './app.css'
 })
 export class App {
   protected readonly title = signal('web');
