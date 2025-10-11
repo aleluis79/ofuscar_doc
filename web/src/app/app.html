@@ -1,44 +1,67 @@
 <router-outlet />
 
-<div class="min-h-screen flex flex-col items-center justify-start bg-gray-50 py-8 px-4">
-  <div class="w-full max-w-xl bg-white rounded-lg shadow-md p-6 space-y-6">
-    <h3 class="text-2xl font-semibold text-gray-800">Texto a ofuscar</h3>
-    <textarea
-      [(ngModel)]="texto_a_ofuscar"
-      class="w-full min-h-[120px] p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 resize-y text-gray-700"
-      placeholder="Introduce el texto aquí..."
-    ></textarea>
+<div class="min-h-screen flex flex-col items-center bg-gradient-to-br py-10 px-6">
+  <div class="w-full max-w-5xl bg-white rounded-2xl shadow-xl p-8 md:p-10 space-y-8 border border-gray-100">
+    <h2 class="text-3xl font-bold text-gray-800 text-center">⚙️Ofuscador de texto</h2>
+
+    <div class="space-y-4">
+      <label class="block text-lg font-medium text-gray-700">Texto a ofuscar</label>
+      <textarea
+        [(ngModel)]="texto_a_ofuscar"
+        class="w-full min-h-[160px] p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 focus:border-blue-500 resize-y text-gray-700"
+        placeholder="Introduce el texto aquí..."
+      ></textarea>
+    </div>
+
     @if (texto_a_ofuscar()) {
-      <button
-        (click)="ofuscar(texto_a_ofuscar())"
-        class="w-full py-2 px-4 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition"
-        type="button"
-      >
-        Ofuscar
-      </button>
-    }
-    @if (mapeos()) {
-      <div class="space-y-4">
-        <div>
-          <h3 class="text-xl font-semibold text-gray-700">Texto ofuscado</h3>
-          <pre class="bg-gray-100 rounded p-3 text-gray-800 break-words">{{ texto_ofuscado() }}</pre>
-        </div>
-        <div>
-          <h3 class="text-xl font-semibold text-gray-700">Mapeos</h3>
-          <pre class="bg-gray-100 rounded p-3 text-gray-600 text-sm overflow-x-auto">{{ mapeos() | json }}</pre>
-        </div>
-        <div>
-          <h3 class="text-xl font-semibold text-gray-700">Texto desofuscado</h3>
-          <button
-            (click)="desofuscar()"
-            class="w-full py-2 px-4 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition"
-            type="button"
-          >
-            Desofuscar
-          </button>
-          <pre class="bg-gray-100 rounded p-3 text-gray-800 break-words mt-2">{{ texto_desofuscado() }}</pre>
-        </div>
+      <div class="flex justify-end">
+        <button
+          (click)="ofuscar(texto_a_ofuscar())"
+          class="py-2.5 px-6 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition transform hover:scale-[1.02]"
+          type="button"
+        >
+          🔒 Ofuscar
+        </button>
       </div>
+    
+
+      @if (mapeos()) {
+        <div class="grid md:grid-cols-2 gap-8 pt-6 border-t border-gray-200">
+          <!-- Texto Ofuscado -->
+          <div class="space-y-3">
+            <h3 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
+              <span class="text-blue-600">🌀</span> Texto Ofuscado
+            </h3>
+            <pre class="bg-gray-50 rounded-lg p-4 text-gray-800 border border-gray-200 whitespace-pre-wrap break-words"> {{ texto_ofuscado() }}</pre>
+          </div>
+
+          <!-- Mapeos -->
+          <div class="space-y-3">
+            <h3 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
+              <span class="text-purple-600">🧩</span> Mapeos
+            </h3>
+            <pre class="bg-gray-50 rounded-lg p-4 text-gray-700 border border-gray-200 text-sm overflow-x-auto">{{ mapeos() | json }}</pre>
+          </div>
+
+          <!-- Texto Desofuscado -->
+          <div class="md:col-span-2 space-y-3">
+            <h3 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
+              <span class="text-green-600">🔓</span> Texto Desofuscado
+            </h3>
+
+            <button
+              (click)="desofuscar()"
+              class="w-full md:w-auto py-2.5 px-6 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition transform hover:scale-[1.02]"
+              type="button"
+            >
+              Desofuscar
+            </button>
+            @if (this.texto_desofuscado()) {
+              <pre class="bg-gray-50 rounded-lg p-4 text-gray-800 border border-gray-200 whitespace-pre-wrap break-words mt-2">{{ texto_desofuscado() }}</pre>
+            }
+          </div>
+        </div>
+      }
     }
   </div>
 </div>

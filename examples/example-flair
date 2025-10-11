@@ -1,0 +1,20 @@
+from flair.data import Sentence
+from flair.models import SequenceTagger
+
+# load tagger
+tagger = SequenceTagger.load("aymurai/flair-ner-spanish-judicial")
+
+# make example sentence
+sentence = Sentence("1. DECLARAR EXTINGUIDA LA ACCIÓN PENAL en este caso por cumplimiento de la suspensión del proceso a prueba, y SOBRESEER a EZEQUIEL CAMILO MARCONNI, DNI 11.222.333, en orden a los delitos de lesiones leves agravadas, amenazas simples y agravadas por el uso de armas.")
+
+# predict NER tags
+tagger.predict(sentence)
+
+# print sentence
+print(sentence)
+
+# print predicted NER spans
+print('The following NER tags are found:')
+# iterate over entities and print
+for entity in sentence.get_spans('ner'):
+    print(entity)

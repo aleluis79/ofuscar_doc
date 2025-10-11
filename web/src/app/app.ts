@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterOutlet } from '@angular/router';
 import { Ofuscar, OfuscarManager } from './ofuscar-manager';
@@ -19,6 +19,12 @@ export class App {
   mapeos = signal('');
 
   ofuscarManager = inject(OfuscarManager);
+
+  ef = effect(() => {
+    if (!this.texto_a_ofuscar()) {
+      this.mapeos.set('')
+    }
+  })
 
   ofuscar(texto: string) {
     this.texto_desofuscado.set('');
