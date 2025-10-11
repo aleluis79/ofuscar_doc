@@ -3,10 +3,11 @@ import { FormsModule } from '@angular/forms';
 import { RouterOutlet } from '@angular/router';
 import { Ofuscar, OfuscarManager } from './ofuscar-manager';
 import { JsonPipe } from '@angular/common';
+import { SwitchMode } from './switch-mode/switch-mode';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, FormsModule, JsonPipe],
+  imports: [RouterOutlet, FormsModule, JsonPipe, SwitchMode],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

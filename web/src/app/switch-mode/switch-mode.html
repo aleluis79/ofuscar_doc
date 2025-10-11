@@ -1,0 +1,12 @@
+<!-- Botón de tema -->
+<div class="flex justify-end">
+    <button (click)="toggleTheme()" class="flex items-center rounded-full gap-2 py-2 px-4  border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 transition">
+         @if(theme === 'light') {
+            <span>☀️ Claro</span>
+         } @else if(theme === 'dark') {
+            <span>🌙 Oscuro</span>
+         } @else {
+            <span>⚙️ Auto</span>
+         }
+    </button>
+</div>
