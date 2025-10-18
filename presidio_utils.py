@@ -1,8 +1,59 @@
 import hashlib
 import os
-from presidio_analyzer import AnalyzerEngine, PatternRecognizer, Pattern
+import re
+import unicodedata
+from presidio_analyzer import AnalyzerEngine, PatternRecognizer, Pattern, RecognizerResult
 from presidio_analyzer.nlp_engine import TransformersNlpEngine
 from presidio_analyzer.nlp_engine import TransformersNlpEngine, NerModelConfiguration
+
+class AccentInsensitiveNameRecognizer(PatternRecognizer):
+    supported_entity: str
+    supported_language: str
+
+    def quitar_acentos_simple(self, s: str) -> str:
+        return ''.join(c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn')
+
+    def __init__(self, deny_list, supported_entity="CUSTOM_NAME", supported_language="es"):
+        super().__init__(supported_entity=supported_entity, supported_language=supported_language, deny_list=deny_list)
+        self.supported_entity = supported_entity
+        self.supported_language = supported_language
+        # Preprocesamos deny_list para normalizar y preparar el patrón regex
+        nombres_normalizados = [re.escape(self.quitar_acentos_simple(n.lower())) for n in deny_list]
+        # Construimos un solo patrón regex que busque coincidencias por palabra completa
+        self.regex = re.compile(r"\b(" + "|".join(nombres_normalizados) + r")\b", re.UNICODE)
+
+    def analyze(self, text, entities, nlp_artifacts=None, regex_flags=None):
+        text_lower = text.lower()
+
+        # Creamos texto normalizado (sin acentos)
+        normalized_chars = []
+        orig_index_map = []
+        for i, ch in enumerate(text_lower):
+            norm = ''.join(
+                c for c in unicodedata.normalize('NFD', ch)
+                if unicodedata.category(c) != 'Mn'
+            )
+            for c in norm:
+                normalized_chars.append(c)
+                orig_index_map.append(i)
+
+        normalized_text = ''.join(normalized_chars)
+
+        results = []
+        for match in self.regex.finditer(normalized_text):
+            start_norm, end_norm = match.span()
+            start_orig = orig_index_map[start_norm]
+            end_orig = orig_index_map[end_norm - 1] + 1
+            results.append(
+                RecognizerResult(
+                    entity_type=self.supported_entity,
+                    start=start_orig,
+                    end=end_orig,
+                    score=1.0
+                )
+            )
+        return results
+
 
 class PresidioUtils:
 
@@ -101,7 +152,18 @@ class PresidioUtils:
                 'Domínguez', 'Vázquez', 'Ramos', 'Gil', 'Ramírez', 'Serrano', 'Blanco', 'Molina'
             ]
 
-    nombres_recognizer = PatternRecognizer(
+    # import csv   
+    # 
+    # with open("nombres.csv", "w", newline="", encoding="utf-8") as f:
+    # writer = csv.writer(f)
+    # for nombre in nombres:
+    #     writer.writerow([nombre]) 
+    #
+    # with open("nombres.csv", "r", encoding="utf-8") as f:
+    #     nombres = [row[0] for row in csv.reader(f)]
+
+
+    nombres_recognizer = AccentInsensitiveNameRecognizer(
         supported_entity="CUSTOM_NAME", 
         deny_list=nombres,
         supported_language="es"
@@ -117,7 +179,7 @@ class PresidioUtils:
         "IPP": "ipps",
         "PHONE_NUMBER": "telefonos",
         "PHONE": "telefonos",
-        "NOMBRES": "nombres",
+        "DATE_TIME": "fechas",
         "CUSTOM_NAME" : "nombres"
     }
 
@@ -135,7 +197,7 @@ class PresidioUtils:
         # --- Análisis del texto ---
         results = self.analyzer.analyze(
             text=text,
-            entities=["PERSON", "CUSTOM_NAME", "URL", "PHONE_NUMBER", "PHONE", "EMAIL", "DNI", "NOTA", "IPP"],
+            entities=["PERSON", "CUSTOM_NAME", "DATE_TIME", "URL", "PHONE_NUMBER", "PHONE", "EMAIL", "DNI", "NOTA", "IPP"],
             language='es'
         )
         # Construcción del mapa de reemplazo
