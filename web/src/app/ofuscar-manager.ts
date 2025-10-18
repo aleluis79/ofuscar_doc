@@ -10,8 +10,8 @@ export class OfuscarManager {
 
   http = inject(HttpClient);
   
-  ofuscar(texto: string) : Observable<Ofuscar> {
-    return this.http.post<Ofuscar>(environment.URL_API + '/ofuscar', { texto });
+  ofuscar(texto: string, motor?: string) : Observable<Ofuscar> {
+    return this.http.post<Ofuscar>(environment.URL_API + '/ofuscar', { texto, motor});
   }
 
   desofuscar(texto: Ofuscar) : Observable<Desofuscar> {

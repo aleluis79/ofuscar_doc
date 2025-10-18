@@ -1,69 +1,57 @@
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning)  # ignore warnings from CUDA
+
+import os
 from fastapi import FastAPI
 from pydantic import BaseModel
-import scrubadub
-import scrubadub_spacy
-import re
-import hashlib
-from scrubadub.filth import NameFilth, Filth
-from faker import Faker
+from presidio_utils import PresidioUtils
+from scrubadub_utils import ScrubadubUtils
 
-# --- Definición de Filths personalizados ---
-class CBUFilth(Filth):
-    type = "cbu"
-
-class CreditCardFilth(Filth):
-    type = "credit_card"
-
-class DNIFilth(Filth):
-    type = "dni"
-
-class NOTAFilth(Filth):
-    type = "nota"
-
-class IPPFilth(Filth):
-    type = "ipp"
-
-# --- Detectores ---
-class CBUDetector(scrubadub.detectors.RegexDetector):
-    name = 'cbu_detector'
-    filth_cls = CBUFilth
-    regex = re.compile(r"\b\d{22}\b")
-
-class CreditCardDetector(scrubadub.detectors.RegexDetector):
-    name = 'creditCard_detector'
-    filth_cls = CreditCardFilth
-    regex = re.compile(r"\d{4}[- ]\d{4}[- ]\d{4}[- ]\d{4}")
-
-class DNIDetector(scrubadub.detectors.RegexDetector):
-    name = 'dni_detector'
-    filth_cls = DNIFilth
-    regex = re.compile(r"\b\d{1,2}\.?\d{3}\.?\d{3}\b")
-
-class NOTADetector(scrubadub.detectors.RegexDetector):
-    name = 'nota_detector'
-    filth_cls = NOTAFilth
-    regex = re.compile(r'NOTA-\d{1,6}-\d{1,2}-\d{1,2}')
-
-class IPPDetector(scrubadub.detectors.RegexDetector):
-    name = 'ipp_detector'
-    filth_cls = IPPFilth
-    regex = re.compile(r'[A-Za-z]{2}-\d{2}-\d{2}-\d{6}-\d{2}[-/]\d{2}')
-
-# --- Inicialización ---
-fake = Faker(locale="es_AR")
-scrubber = scrubadub.Scrubber(locale="es_AR")
-scrubber.add_detector(scrubadub_spacy.detectors.SpacyEntityDetector(locale="en_US"))
-scrubber.add_detector(CBUDetector)
-scrubber.add_detector(CreditCardDetector)
-scrubber.add_detector(DNIDetector)
-scrubber.add_detector(NOTADetector)
-scrubber.add_detector(IPPDetector)
-
-apertura = "{{"
-cierre = "}}"
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry import metrics, trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.instrumentation.requests import RequestsInstrumentor
 
 # --- FastAPI ---
 app = FastAPI(title="API de Ofuscación de Texto")
+
+# Definir recurso (nombre del servicio)
+resource = Resource.create({"service.name": "ofuscar-api"})
+
+# URL del collector (puede venir por variable de entorno)
+collector_url = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://chatia-opentelemetry-collector.chatia-desa.svc.cluster.local:4317")
+
+# Exportadores OTLP (métricas y trazas)
+metric_exporter = OTLPMetricExporter(endpoint=collector_url, insecure=True)
+span_exporter = OTLPSpanExporter(endpoint=collector_url, insecure=True)
+
+# Configurar métricas
+metric_reader = PeriodicExportingMetricReader(metric_exporter)
+metrics_provider = MeterProvider(resource=resource, metric_readers=[metric_reader])
+metrics.set_meter_provider(metrics_provider)
+
+# Configurar trazas
+tracer_provider = TracerProvider(resource=resource)
+tracer_provider.add_span_processor(BatchSpanProcessor(span_exporter))
+trace.set_tracer_provider(tracer_provider)
+
+# Instrumentar FastAPI y Requests
+FastAPIInstrumentor.instrument_app(app)
+RequestsInstrumentor().instrument()
+
+# Crear un contador de requests
+meter = metrics.get_meter(__name__)
+request_counter = meter.create_counter(
+    name="requests_total",
+    description="Número total de requests procesadas",
+    unit="1",
+)
 
 # Add Cors
 from fastapi.middleware.cors import CORSMiddleware
@@ -75,9 +63,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 class TextoRequest(BaseModel):
     texto: str
+    motor: str = "scrubadub"
 
 class TextoDesofuscarRequest(BaseModel):
     texto_ofuscado: str
@@ -90,61 +78,26 @@ def ping():
 @app.post("/ofuscar")
 def ofuscar(request: TextoRequest):
     """
-    Para ofuscar, el cliente debe enviar:
-    {
-        "texto": "Mi número de teléfono es (221) 455-5555 y mi correo es pepe@argento.com..."
-    }
-    """
-    text = request.texto
+    Para ofuscar, el cliente debe enviar:\n
+        {\n
+            "texto": "Mi número de teléfono es (221) 455-5555 y mi correo es pepe@argento.com...",\n
+            "motor": "scrubadub"\n
+        }\n
+    Opciones de motor:\n
+    ➡️scrubadub (por defecto)\n
+    ➡️presidio\n
+    """    
+    request_counter.add(1, {"endpoint": "/ofuscar"})
+    motor = request.motor
 
-    field_config = {
-        "name": {"output": "nombres", "prefix": "NAME"},
-        "phone": {"output": "telefonos", "prefix": "PHONE"},
-        "email": {"output": "emails", "prefix": "MAIL"},
-        "cbu": {"output": "cbus", "prefix": "CBU"},
-        "url": {"output": "urls", "prefix": "URL"},
-        "credit_card": {"output": "tarjetas", "prefix": "CREDID_CARD"},
-        "dni": {"output": "dnis", "prefix": "DNI"},
-        "ipp": {"output": "ipps", "prefix": "IPP"},
-        "nota": {"output": "notas", "prefix": "NOTA"},
-    }
-
-    temp_maps = {
-        "nombres": {},
-        "telefonos": {},
-        "emails": {},
-        "cbus": {},
-        "urls": {},
-        "tarjetas": {},
-        "dnis": {},
-        "ipps": {},
-        "notas": {},
-    }
-
-    try:
-        filths = list(scrubber.iter_filth(text))
-    except:
-        filths = []
-  
-    for filth in filths:
-        # Procesar solo si el tipo está en la configuración        
-        config = field_config.get(filth.type, None)
-        if config:
-            original_text = filth.text
-            text_map = temp_maps[config["output"]]
-            prefix = config["prefix"]
-
-            if original_text not in text_map:
-                unique_id = hashlib.sha1(original_text.encode()).hexdigest()[:4]
-                text_map[original_text] = f"{apertura}{prefix}_{unique_id}{cierre}"
-
-            text = text.replace(original_text, text_map[original_text])
-
-    # Retornamos el texto ofuscado y los mapeos
-    return {
-        "texto_ofuscado": text,
-        "mapeos": temp_maps,
-    }
+    if motor == "scrubadub":
+        ofuscador = ScrubadubUtils()
+    elif motor == "presidio":
+        ofuscador = PresidioUtils()
+    else:
+        return {"error": "Motor no reconocido. Opciones: scrubadub, presidio"}    
+    
+    return ofuscador.ofuscar(request.texto)
 
 @app.post("/desofuscar")
 def desofuscar(request: TextoDesofuscarRequest):
@@ -155,6 +108,7 @@ def desofuscar(request: TextoDesofuscarRequest):
         "mapeos": {...}
     }
     """
+    request_counter.add(1, {"endpoint": "/desofuscar"})
     data = request.model_dump()
     text = data.get("texto_ofuscado", "")
     mapeos = data.get("mapeos", {})

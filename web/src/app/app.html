@@ -16,14 +16,33 @@
     </div>
 
     @if (texto_a_ofuscar()) {
-      <div class="flex justify-end">
-        <button
-          (click)="ofuscar(texto_a_ofuscar())"
-          class="py-2.5 px-6 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition transform hover:scale-[1.02]"
-          type="button"
-        >
-          🔒 Ofuscar
-        </button>
+
+      <div class="space-y-6">
+        <!-- Selector de motor -->
+        <div class="space-y-2">
+          <label for="motor" class="block text-lg font-medium text-gray-700 dark:text-gray-100">
+            Motor de Ofuscación
+          </label>
+          <select
+            id="motor"
+            [(ngModel)]="motorSeleccionado"
+            class="w-full md:w-1/2 p-3 border border-gray-300 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition"
+          >
+            <option value="scrubadub">Scrubadub</option>
+            <option value="presidio">Presidio</option>
+          </select>
+        </div>
+
+
+        <div class="flex justify-end">
+          <button
+            (click)="ofuscar(texto_a_ofuscar())"
+            class="py-2.5 px-6 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition transform hover:scale-[1.02]"
+            type="button"
+          >
+            🔒 Ofuscar
+          </button>
+        </div>
       </div>
     
 

@@ -18,6 +18,7 @@ export class App {
   texto_ofuscado = signal('');
   texto_desofuscado = signal('');
   mapeos = signal('');
+  motorSeleccionado = signal('scrubadub');
 
   ofuscarManager = inject(OfuscarManager);
 
@@ -29,7 +30,7 @@ export class App {
 
   ofuscar(texto: string) {
     this.texto_desofuscado.set('');
-    this.ofuscarManager.ofuscar(texto).subscribe((ofuscado) => {
+    this.ofuscarManager.ofuscar(texto, this.motorSeleccionado()).subscribe((ofuscado) => {
       this.texto_ofuscado.set(ofuscado.texto_ofuscado);
       this.mapeos.set(ofuscado.mapeos);
     });

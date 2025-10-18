@@ -2,5 +2,11 @@ fastapi
 uvicorn
 scrubadub
 scrubadub-spacy
+presidio-analyzer[transformers]
 faker
 pydantic
+opentelemetry-api
+opentelemetry-sdk
+opentelemetry-exporter_otlp
+opentelemetry-instrumentation-fastapi
+opentelemetry-instrumentation-requests
