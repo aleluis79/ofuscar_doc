@@ -1,8 +1,11 @@
 import warnings
+
+from download_utils import DownloadUtils
 warnings.filterwarnings("ignore", category=UserWarning)  # ignore warnings from CUDA
 
 import os
 from fastapi import FastAPI
+from contextlib import asynccontextmanager
 from pydantic import BaseModel
 from presidio_utils import PresidioUtils
 from scrubadub_utils import ScrubadubUtils
@@ -18,8 +21,17 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("🚀 Iniciando aplicación...")
+    # Descargar modelos
+    DownloadUtils().download_all()
+    yield
+    print("🛑 Cerrando aplicación...")
+
 # --- FastAPI ---
-app = FastAPI(title="API de Ofuscación de Texto")
+app = FastAPI(title="API de Ofuscación de Texto", lifespan=lifespan)
 
 # Definir recurso (nombre del servicio)
 resource = Resource.create({"service.name": "ofuscar-api"})
