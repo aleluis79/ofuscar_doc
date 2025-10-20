@@ -68,6 +68,6 @@ class DownloadUtils:
 
     def download_all(self):
         self.__download_spacy_model_to_folder("es_core_news_lg")
-        self.__download_spacy_model_to_folder("en_core_web_trf")
+        #self.__download_spacy_model_to_folder("en_core_web_trf")
         self.__download("samuelalvarez034/PlanTL-GOB-ES-roberta-base-bne-ner", self.path_destino + "/roberta-base-bne-ner")
 

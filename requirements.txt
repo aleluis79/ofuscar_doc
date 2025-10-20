@@ -2,6 +2,7 @@ fastapi
 uvicorn
 spacy
 scrubadub
+scrubadub-spacy
 presidio-analyzer[transformers]
 faker
 pydantic

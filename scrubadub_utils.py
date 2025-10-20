@@ -5,6 +5,7 @@ import scrubadub
 from scrubadub.filth import Filth
 from scrubadub.detectors.catalogue import register_detector
 from scrubadub.detectors import Detector
+import scrubadub_spacy
 import spacy
 
 # --- Definición de Filths personalizados ---
@@ -22,15 +23,6 @@ class NOTAFilth(Filth):
 
 class IPPFilth(Filth):
     type = "ipp"
-
-class NameFilth(Filth):
-    type = "name"
-
-class DateFilth(Filth):
-    type = "date"
-
-class OrgFilth(Filth):
-    type = "org"
 
 
 class ScrubadubUtils:
@@ -81,29 +73,9 @@ class ScrubadubUtils:
             "date": {"output": "fechas", "prefix": "DATE"},
         }
 
-        @register_detector
-        class LocalSpacyDetector(Detector):
-            name = "local_spacy"
-            
-            nlp = spacy.load("modelos/en_core_web_trf-3.8.0/en_core_web_trf/en_core_web_trf-3.8.0")
-
-            def iter_filth(self, text, document_name=None):
-                doc = self.nlp(text)
-                for ent in doc.ents:
-                    # print(ent.text, ent.label_)
-                    if ent.label_ == "PERSON":
-                        yield NameFilth(beg=ent.start_char, end=ent.end_char, text=ent.text)
-                    elif ent.label_ == "DATE":
-                        yield DateFilth(beg=ent.start_char, end=ent.end_char, text=ent.text)
-                    # elif ent.label_ == "ORG":
-                    #     yield OrgFilth(beg=ent.start_char, end=ent.end_char, text=ent.text)
-
-
-
-
         # --- Inicialización ---
         scrubber = scrubadub.Scrubber(locale="es_AR")
-        scrubber.add_detector(LocalSpacyDetector())
+        scrubber.add_detector(scrubadub_spacy.detectors.SpacyEntityDetector(locale="en_US"))
         scrubber.add_detector(self.CBUDetector)
         scrubber.add_detector(self.CreditCardDetector)
         scrubber.add_detector(self.DNIDetector)
