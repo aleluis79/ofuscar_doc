@@ -6,6 +6,9 @@ WORKDIR /app
 # Copiar los archivos de requerimientos (si existen)
 COPY requirements.txt .
 
+# Desactivar la comprobación de la versión de pip
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+
 # Instalar dependencias
 RUN pip install --no-cache-dir -r requirements.txt
 

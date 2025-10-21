@@ -35,7 +35,7 @@ app = FastAPI(title="API de Ofuscación de Texto", lifespan=lifespan)
 resource = Resource.create({"service.name": "ofuscar-api"})
 
 # URL del collector (puede venir por variable de entorno)
-collector_url = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://chatia-opentelemetry-collector.chatia-desa.svc.cluster.local:4317")
+collector_url = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://opentelemetry-collector:4317")
 
 # Exportadores OTLP (métricas y trazas)
 metric_exporter = OTLPMetricExporter(endpoint=collector_url, insecure=True)

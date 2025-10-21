@@ -1,3 +1,4 @@
+import csv
 import hashlib
 import os
 import re
@@ -59,6 +60,7 @@ class PresidioUtils:
 
     apertura = os.getenv("TAG_APERTURA", "")
     cierre = os.getenv("TAG_CIERRE", "")
+    path_diccionarios = os.getenv("PATH_DICCIONARIOS", "diccionarios")
 
     # Configuración del modelo en español
     model_config = [{
@@ -152,30 +154,31 @@ class PresidioUtils:
         )
         analyzer.registry.add_recognizer(ipp_recognizer)
 
-        nombres = [ 'Amarillo', 'Irma', 'Pablo','Walter','Juan', 'María', 'Carlos', 'Ana', 'José', 'Laura', 'Pedro', 
-                    'Miguel', 'Carmen', 'Antonio', 'Isabel', 'Francisco', 'Patricia', 'Manuel', 'Rosa','Sofía', 
-                    'Jorge', 'Marta', 'Roberto', 'Lucia', 'Diego', 'Paula', 'Fernando', 'Andrea','Luis', 'Elena',
-                    'Raúl', 'Gabriela', 'Alberto', 'Silvia', 'Ricardo', 'Cristina', 'Eduardo', 'Beatriz', 'María'
-                    'Sergio', 'Mónica', 'Daniel', 'Claudia', 'Martín', 'Sandra', 'Alejandro', 'Teresa', 'Javier',
-                    'Natalia', 'Guillermo', 'Victoria', 'Manuel', 'Paula', 'Fernando', 'Andrea', 'Raúl', 'Gabriela',
-                    'Alberto', 'Silvia', 'Ricardo', 'Cristina', 'Eduardo', 'Beatriz', 'Sergio', 'Mónica', 'Daniel',
-                    'Claudia', 'Martín', 'Sandra', 'Alejandro', 'Teresa', 'Javier', 'Natalia', 'Guillermo', 'Victoria',
-                    'Garcia', 'García', 'Rodríguez', 'González', 'Fernández', 'López', 'Martínez', 'Sánchez',
-                    'Pérez', 'Gómez', 'Martín', 'Jiménez', 'Ruiz', 'Hernández', 'Díaz', 'Moreno',
-                    'Álvarez', 'Muñoz', 'Romero', 'Alonso', 'Gutiérrez', 'Navarro', 'Torres',
-                    'Domínguez', 'Vázquez', 'Ramos', 'Gil', 'Ramírez', 'Serrano', 'Blanco', 'Molina'
-                ]
+        # Crear directorio diccionarios si no existe
+        os.makedirs(self.path_diccionarios, exist_ok=True)            
 
-        # import csv   
-        # 
-        # with open("nombres.csv", "w", newline="", encoding="utf-8") as f:
-        # writer = csv.writer(f)
-        # for nombre in nombres:
-        #     writer.writerow([nombre]) 
-        #
-        # with open("nombres.csv", "r", encoding="utf-8") as f:
-        #     nombres = [row[0] for row in csv.reader(f)]
+        # Verifico si existe el archivo nombres.csv en el directorio diccionarios
+        if not os.path.exists(f"{self.path_diccionarios}/nombres.csv"):
+            with open(f"{self.path_diccionarios}/nombres.csv", "w", newline="", encoding="utf-8") as f:
+                writer = csv.writer(f)
+                nombres_example = [ 'Amarillo', 'Irma', 'Pablo','Walter','Juan', 'María', 'Carlos', 'Ana', 'José', 'Laura', 'Pedro', 
+                            'Miguel', 'Carmen', 'Antonio', 'Isabel', 'Francisco', 'Patricia', 'Manuel', 'Rosa','Sofía', 
+                            'Jorge', 'Marta', 'Roberto', 'Lucia', 'Diego', 'Paula', 'Fernando', 'Andrea','Luis', 'Elena',
+                            'Raúl', 'Gabriela', 'Alberto', 'Silvia', 'Ricardo', 'Cristina', 'Eduardo', 'Beatriz', 'María'
+                            'Sergio', 'Mónica', 'Daniel', 'Claudia', 'Martín', 'Sandra', 'Alejandro', 'Teresa', 'Javier',
+                            'Natalia', 'Guillermo', 'Victoria', 'Manuel', 'Paula', 'Fernando', 'Andrea', 'Raúl', 'Gabriela',
+                            'Alberto', 'Silvia', 'Ricardo', 'Cristina', 'Eduardo', 'Beatriz', 'Sergio', 'Mónica', 'Daniel',
+                            'Claudia', 'Martín', 'Sandra', 'Alejandro', 'Teresa', 'Javier', 'Natalia', 'Guillermo', 'Victoria',
+                            'Garcia', 'García', 'Rodríguez', 'González', 'Fernández', 'López', 'Martínez', 'Sánchez',
+                            'Pérez', 'Gómez', 'Martín', 'Jiménez', 'Ruiz', 'Hernández', 'Díaz', 'Moreno',
+                            'Álvarez', 'Muñoz', 'Romero', 'Alonso', 'Gutiérrez', 'Navarro', 'Torres',
+                            'Domínguez', 'Vázquez', 'Ramos', 'Gil', 'Ramírez', 'Serrano', 'Blanco', 'Molina'
+                        ]                
+                for nombre in nombres_example:
+                    writer.writerow([nombre]) 
 
+        with open(f"{self.path_diccionarios}/nombres.csv", "r", encoding="utf-8") as f:
+            nombres = [row[0] for row in csv.reader(f)]
 
         nombres_recognizer = AccentInsensitiveNameRecognizer(
             supported_entity="CUSTOM_NAME", 
