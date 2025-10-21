@@ -64,7 +64,8 @@ class PresidioUtils:
     model_config = [{
         "lang_code": "es",
         "model_name": {
-            "spacy": "modelos/es_core_news_lg-3.8.0/es_core_news_lg/es_core_news_lg-3.8.0",
+            #"spacy": "modelos/es_core_news_lg-3.8.0/es_core_news_lg/es_core_news_lg-3.8.0",
+            "spacy": "es_core_news_lg",            
             "transformers": "modelos/roberta-base-bne-ner"
     }
     }]

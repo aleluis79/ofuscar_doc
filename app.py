@@ -7,8 +7,6 @@ import os
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from pydantic import BaseModel
-from presidio_utils import PresidioUtils
-from scrubadub_utils import ScrubadubUtils
 
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
@@ -99,6 +97,11 @@ def ofuscar(request: TextoRequest):
     ➡️scrubadub (por defecto)\n
     ➡️presidio\n
     """    
+
+    from presidio_utils import PresidioUtils
+    from scrubadub_utils import ScrubadubUtils
+
+
     request_counter.add(1, {"endpoint": "/ofuscar"})
     motor = request.motor
 
